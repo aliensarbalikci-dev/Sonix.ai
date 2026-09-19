@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sonix">
+<meta name="theme-color" content="#14171F">
+<title>Sonix — Metinden Sese</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14171F;
+    --surface:#1D2230;
+    --surface-2:#262C3D;
+    --amber:#F2B705;
+    --teal:#5EC8D8;
+    --text:#EDEBE4;
+    --muted:#8A8FA3;
+    --danger:#E8636B;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-sizing: border-box;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'IBM Plex Sans', system-ui, sans-serif;
+    -webkit-font-smoothing:antialiased;
+    display:flex;
+    justify-content:center;
+  }
+  .app{
+    width:100%;
+    max-width:480px;
+    min-height:100%;
+    padding:28px 20px 40px;
+    display:flex;
+    flex-direction:column;
+    gap:22px;
+  }
+  header{display:flex; flex-direction:column; gap:10px; align-items:flex-start;}
+  .bars{display:flex; align-items:flex-end; gap:4px; height:28px;}
+  .bars span{
+    width:4px; border-radius:2px;
+    background:linear-gradient(180deg, var(--amber), var(--teal));
+    animation:wave 1.6s ease-in-out infinite;
+  }
+  .bars span:nth-child(1){height:10px; animation-delay:0s;}
+  .bars span:nth-child(2){height:22px; animation-delay:.15s;}
+  .bars span:nth-child(3){height:14px; animation-delay:.3s;}
+  .bars span:nth-child(4){height:26px; animation-delay:.45s;}
+  .bars span:nth-child(5){height:16px; animation-delay:.6s;}
+  @keyframes wave{
+    0%,100%{transform:scaleY(.5);}
+    50%{transform:scaleY(1);}
+  }
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:2rem;
+    margin:0;
+    letter-spacing:-0.02em;
+  }
+  .sub{color:var(--muted); font-size:.95rem; margin:0; line-height:1.5;}
+
+  section{
+    background:var(--surface);
+    border-radius:16px;
+    padding:18px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  label{font-size:.85rem; color:var(--muted); font-weight:500;}
+  input[type="password"], textarea, select{
+    background:var(--surface-2);
+    border:1px solid #333A4E;
+    color:var(--text);
+    border-radius:10px;
+    padding:12px 14px;
+    font-family:inherit;
+    font-size:1rem;
+    width:100%;
+    outline:none;
+  }
+  input[type="password"]:focus, textarea:focus, select:focus{
+    border-color:var(--amber);
+  }
+  textarea{resize:vertical; min-height:110px; line-height:1.5;}
+
+  button{
+    background:var(--amber);
+    color:#1A1400;
+    border:none;
+    border-radius:10px;
+    padding:13px 16px;
+    font-size:1rem;
+    font-weight:600;
+    font-family:inherit;
+    cursor:pointer;
+  }
+  button:disabled{opacity:.5; cursor:default;}
+  button.secondary{
+    background:transparent;
+    color:var(--teal);
+    border:1px solid var(--teal);
+  }
+
+  .status{font-size:.85rem; min-height:18px;}
+  .status.error{color:var(--danger);}
+  .status.ok{color:var(--teal);}
+
+  .voice-list{display:flex; flex-wrap:wrap; gap:8px;}
+  .voice-chip{
+    padding:8px 14px;
+    border-radius:999px;
+    background:var(--surface-2);
+    border:1px solid #333A4E;
+    font-size:.85rem;
+    cursor:pointer;
+  }
+  .voice-chip.active{
+    border-color:var(--amber);
+    color:var(--amber);
+  }
+
+  audio{width:100%; margin-top:6px;}
+  footer{color:var(--muted); font-size:.78rem; text-align:center; line-height:1.6; margin-top:auto;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="bars"><span></span><span></span><span></span><span></span><span></span></div>
+    <h1>Sonix</h1>
+    <p class="sub">Metnini yaz, ElevenLabs sesleriyle dinle. Anahtarın sadece bu oturumda, senin telefonunda kalır — hiçbir sunucuya gönderilmez.</p>
+  </header>
+
+  <section id="key-section">
+    <label for="apiKey">ElevenLabs API Anahtarı</label>
+    <input type="password" id="apiKey" placeholder="xi-api-key değerini yapıştır">
+    <button id="connectBtn">Bağlan ve sesleri getir</button>
+    <p class="status" id="keyStatus"></p>
+  </section>
+
+  <section id="voice-section" style="display:none;">
+    <label>Ses seç</label>
+    <div class="voice-list" id="voiceList"></div>
+  </section>
+
+  <section id="text-section" style="display:none;">
+    <label for="text">Okutulacak metin</label>
+    <textarea id="text" placeholder="Buraya yazdığın metni SesAI seslendirsin..."></textarea>
+    <button id="generateBtn">Sesi oluştur</button>
+    <p class="status" id="genStatus"></p>
+    <audio id="player" controls style="display:none;"></audio>
+    <a id="downloadLink" href="#" download="ses.mp3" style="display:none;">
+      <button class="secondary" style="width:100%; margin-top:6px;" type="button">İndir</button>
+    </a>
+  </section>
+
+  <section id="image-section">
+    <label for="imgPrompt">Görsel oluştur</label>
+    <textarea id="imgPrompt" placeholder="Ne çizilsin? Örn: kar altında duran kırmızı bir bisiklet" style="min-height:70px;"></textarea>
+    <button id="imgBtn">Görseli oluştur</button>
+    <p class="status" id="imgStatus"></p>
+    <img id="imgResult" style="display:none; width:100%; border-radius:10px;">
+    <a id="imgDownload" href="#" download="gorsel.jpg" style="display:none;">
+      <button class="secondary" style="width:100%; margin-top:6px;" type="button">İndir</button>
+    </a>
+  </section>
+
+  <section id="chat-section">
+    <label>Sesli sohbet</label>
+    <p class="sub" style="margin:0;">Sağ altta beliren yuvarlak düğmeye dokun, Sonix ile konuşmaya başla.</p>
+  </section>
+
+  <footer>Sonix, ElevenLabs API ile çalışır. Anahtarını kimseyle paylaşma.</footer>
+</div>
+
+<elevenlabs-convai agent-id="agent_1601m2xc3gwaernr5tvp2kfx3d94"></elevenlabs-convai>
+<script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
+
+<script>
+let apiKey = "";
+let selectedVoiceId = null;
+
+const keyStatus = document.getElementById('keyStatus');
+const genStatus = document.getElementById('genStatus');
+const voiceSection = document.getElementById('voice-section');
+const textSection = document.getElementById('text-section');
+const voiceList = document.getElementById('voiceList');
+const player = document.getElementById('player');
+const downloadLink = document.getElementById('downloadLink');
+
+document.getElementById('connectBtn').addEventListener('click', async () => {
+  const key = document.getElementById('apiKey').value.trim();
+  if (!key) {
+    keyStatus.textContent = "Önce anahtarını yapıştır.";
+    keyStatus.className = "status error";
+    return;
+  }
+  apiKey = key;
+  keyStatus.textContent = "Sesler getiriliyor...";
+  keyStatus.className = "status";
+
+  try {
+    const res = await fetch("https://api.elevenlabs.io/v1/voices", {
+      headers: { "xi-api-key": apiKey }
+    });
+    if (!res.ok) throw new Error("Anahtar geçersiz görünüyor (" + res.status + ")");
+    const data = await res.json();
+    renderVoices(data.voices || []);
+    keyStatus.textContent = "Bağlandı.";
+    keyStatus.className = "status ok";
+    voiceSection.style.display = "flex";
+    textSection.style.display = "flex";
+  } catch (err) {
+    keyStatus.textContent = "Bağlanılamadı: " + err.message;
+    keyStatus.className = "status error";
+  }
+});
+
+function renderVoices(voices) {
+  voiceList.innerHTML = "";
+  voices.forEach((v, i) => {
+    const chip = document.createElement('div');
+    chip.className = "voice-chip" + (i === 0 ? " active" : "");
+    chip.textContent = v.name;
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.voice-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      selectedVoiceId = v.voice_id;
+    });
+    voiceList.appendChild(chip);
+    if (i === 0) selectedVoiceId = v.voice_id;
+  });
+}
+
+document.getElementById('imgBtn').addEventListener('click', () => {
+  const prompt = document.getElementById('imgPrompt').value.trim();
+  const imgStatus = document.getElementById('imgStatus');
+  const imgResult = document.getElementById('imgResult');
+  const imgDownload = document.getElementById('imgDownload');
+
+  if (!prompt) {
+    imgStatus.textContent = "Önce ne çizmek istediğini yaz.";
+    imgStatus.className = "status error";
+    return;
+  }
+
+  imgStatus.textContent = "Görsel oluşturuluyor...";
+  imgStatus.className = "status";
+  imgResult.style.display = "none";
+  imgDownload.style.display = "none";
+
+  const seed = Math.floor(Math.random() * 100000);
+  const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=768&height=768&seed=${seed}&nologo=true`;
+
+  imgResult.onload = () => {
+    imgStatus.textContent = "Hazır.";
+    imgStatus.className = "status ok";
+    imgResult.style.display = "block";
+    imgDownload.href = url;
+    imgDownload.style.display = "block";
+  };
+  imgResult.onerror = () => {
+    imgStatus.textContent = "Görsel oluşturulamadı, tekrar dene.";
+    imgStatus.className = "status error";
+  };
+  imgResult.src = url;
+});
+
+document.getElementById('generateBtn').addEventListener('click', async () => {
+  const text = document.getElementById('text').value.trim();
+  if (!text) {
+    genStatus.textContent = "Önce bir metin yaz.";
+    genStatus.className = "status error";
+    return;
+  }
+  if (!selectedVoiceId) {
+    genStatus.textContent = "Bir ses seç.";
+    genStatus.className = "status error";
+    return;
+  }
+  genStatus.textContent = "Ses oluşturuluyor...";
+  genStatus.className = "status";
+  player.style.display = "none";
+  downloadLink.style.display = "none";
+
+  try {
+    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${selectedVoiceId}`, {
+      method: "POST",
+      headers: {
+        "xi-api-key": apiKey,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        text: text,
+        model_id: "eleven_multilingual_v2",
+        voice_settings: { stability: 0.5, similarity_boost: 0.75 }
+      })
+    });
+    if (!res.ok) throw new Error("Oluşturulamadı (" + res.status + ")");
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    player.src = url;
+    player.style.display = "block";
+    downloadLink.href = url;
+    downloadLink.style.display = "block";
+    genStatus.textContent = "Hazır.";
+    genStatus.className = "status ok";
+  } catch (err) {
+    genStatus.textContent = "Hata: " + err.message;
+    genStatus.className = "status error";
+  }
+});
+</script>
+</body>
+</html>
